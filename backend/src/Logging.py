@@ -1,3 +1,5 @@
+
+# Specifies color values or formatting codes for usage in console prints
 class BColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -10,5 +12,6 @@ class BColors:
     UNDERLINE = '\033[4m'
 
 
+# Prints an error message to the console and colours it red
 def print_error(message: str) -> None:
     print(f"{BColors.FAIL}{message}{BColors.ENDC}")
