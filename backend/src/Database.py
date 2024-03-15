@@ -1,25 +1,51 @@
 import mysql.connector
 import User
 import Logging
+import Credentials
 from icecream import ic
+
+
+# Connects to the schedule-manager database and returns the database intance
+def connect_to_database():
+    try:
+        mydb = mysql.connector.connect(  # Connect to database
+            host="localhost",
+            user=Credentials.db_username,
+            password=Credentials.db_password,
+            database="schedule-manager"
+        )
+        return mydb
+    except mysql.connector.Error as e:
+        Logging.print_error("Connecting to Database failed due to the following error:")
+        Logging.print_error(str(e))
+        return None
+
+
+# Executes an command and automatically commits the changes to the database
+def execute_command(database, command: str) -> None:
+    # Execute command
+    try:
+        cursor = database.cursor()
+        cursor.execute(command)
+    except mysql.connector.Error as e:
+        Logging.print_error("Could not execute MySQL command due to the following error:")
+        Logging.print_error(str(e))
+        return
+    # Commit changes
+    database.commit()
 
 
 # Saves a dictionary of data to a specified table in the schedule-manager database
 # call directly only if you know what your doing. For saver execution, use specified
 # caller functions
-def write_to_database(table_name: str, data: dict):
-    mydb = mysql.connector.connect(  # Connect to database
-        host="localhost",
-        user="",
-        password="",
-        database="schedule-manager"
-    )
+def write_to_database(table_name: str, data: dict) -> None:
 
-    # Create cursor for database access
-    mycursor = mydb.cursor()
+    mydb = connect_to_database()
+    if mydb is None:
+        return None
 
     # Craft command from data
-    command = f"INSERT INTO {table_name} ("
+    command: str = f"INSERT INTO {table_name} ("
     for key in data.keys():
         command += f"{key}, "
     command = command[:-2]
@@ -32,16 +58,11 @@ def write_to_database(table_name: str, data: dict):
     command = command[:-2]
     command += ")"
 
-    # Execute command
-    try:
-        mycursor.execute(command)
-    except mysql.connector.Error as e:
-        Logging.print_error("Could not execute MySQL command due to the following error:")
-        Logging.print_error(str(e))
-    # Commit changes
-    mydb.commit()
+    # Execute command and commit
+    execute_command(mydb, command)
 
 
+# Writes the data of a User to the database
 def write_user_data(user: User.User) -> None:
     data = {
         "email": user.email,
