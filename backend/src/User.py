@@ -24,20 +24,14 @@ def check_salt(salt: str) -> bool:
 # Class defining a User of the program
 class User:
 
-    username: str
+    email: str
     password_hash: str
     salt: str
+    alias: str
 
     # Default constructor of a User
-    def __init__(self, username: str, password: str):
-        self.username = username
+    def __init__(self, email: str, password: str, alias: str = ""):
+        self.email = email
         self.salt = create_salt()
         self.password_hash = Hashing.hash_password(password, self.salt)
-
-    # Returns the username of the User
-    def get_username(self) -> str:
-        return self.username
-
-    # Returns the hashed password
-    def get_password_hash(self) -> str:
-        return self.password_hash
+        self.alias = alias

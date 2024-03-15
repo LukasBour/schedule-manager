@@ -5,7 +5,9 @@ from icecream import ic
 
 
 # Saves a dictionary of data to a specified table in the schedule-manager database
-def save_to_database(table_name: str, data: dict):
+# call directly only if you know what your doing. For saver execution, use specified
+# caller functions
+def write_to_database(table_name: str, data: dict):
     mydb = mysql.connector.connect(  # Connect to database
         host="localhost",
         user="",
@@ -13,27 +15,44 @@ def save_to_database(table_name: str, data: dict):
         database="schedule-manager"
     )
 
-    # From here on only testing
+    # Create cursor for database access
     mycursor = mydb.cursor()
 
-    user = User.User("test3", "test1234")
-    user2 = User.User("test2", "test1234")
+    # Craft command from data
+    command = f"INSERT INTO {table_name} ("
+    for key in data.keys():
+        command += f"{key}, "
+    command = command[:-2]
+    command += ") VALUES ("
+    for key in data.keys():
+        if type(data.get(key)) is str:
+            command += f"\'{data.get(key)}\', "
+        else:
+            command += f"{data.get(key)}, "
+    command = command[:-2]
+    command += ")"
 
+    # Execute command
     try:
-        mycursor.execute("INSERT INTO users (username, password_hash, salt) VALUES (%s, %s, %s)",
-                         (user.username, user.password_hash, user.salt))
-        mycursor.execute("INSERT INTO users (username, password_hash, salt) VALUES (%s, %s, %s)",
-                         (user2.username, user2.password_hash, user2.salt))
-        mydb.commit()
+        mycursor.execute(command)
     except mysql.connector.Error as e:
-        Logging.print_error("MySQL command not executed due to the following error:")
-        Logging.print_error(e.msg)
+        Logging.print_error("Could not execute MySQL command due to the following error:")
+        Logging.print_error(str(e))
+    # Commit changes
+    mydb.commit()
 
-    mycursor.execute("SELECT * FROM users")
-    result = mycursor.fetchall()
-    ic(result)
+
+def write_user_data(user: User.User) -> None:
+    data = {
+        "email": user.email,
+        "password_hash": user.password_hash,
+        "salt": user.salt,
+        "alias": user.alias
+    }
+    write_to_database("users", data)
 
 
 # Main entry point for testing only
 if __name__ == "__main__":
-    save_to_database("", {})
+    user_test = User.User("test@web.de", "Test1234", "Timmy Turner")
+    write_user_data(user_test)
