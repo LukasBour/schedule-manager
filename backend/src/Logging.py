@@ -13,5 +13,10 @@ class BColors:
 
 
 # Prints an error message to the console and colours it red
-def print_error(message: str) -> None:
-    print(f"{BColors.FAIL}{message}{BColors.ENDC}")
+def print_error(error: str | Exception) -> None:
+    if type(error) is str:
+        print(f"{BColors.FAIL}{error}{BColors.ENDC}")
+    elif type(error) is Exception:
+        print(f"{BColors.FAIL}{type(error).__name__}: {str(error)}{BColors.ENDC}")
+    else:
+        raise AttributeError(f"Attribute was {type(error)}, but str or Exception were expected.")
